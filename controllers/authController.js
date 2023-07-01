@@ -45,6 +45,10 @@ module.exports.signUp = catchAsync(async (req, res, next) => {
     return next(new appError("Please pass gender", 400));
   }
 
+  const isEmailAlreadyTaken = await User.findOne({ email: req.body.email });
+  if (isEmailAlreadyTaken)
+    return next(new appError("Email has been registered", 400));
+
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,

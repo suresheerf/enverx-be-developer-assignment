@@ -75,6 +75,7 @@ module.exports.deletePost = catchAsync(async (req, res, next) => {
   );
   res.status(204).json({ message: "success" });
 });
+
 module.exports.likePost = catchAsync(async (req, res, next) => {
   const blogPost = await Post.findByIdAndUpdate(
     req.params.id,
@@ -85,6 +86,7 @@ module.exports.likePost = catchAsync(async (req, res, next) => {
   );
   res.status(200).json({ message: "success" });
 });
+
 module.exports.unlikePost = catchAsync(async (req, res, next) => {
   const blogPost = await Post.findByIdAndUpdate(
     req.params.id,

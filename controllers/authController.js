@@ -31,29 +31,30 @@ const createSendToken = (user, statusCode, req, res) => {
 };
 
 module.exports.signUp = catchAsync(async (req, res, next) => {
-  console.log("body:", req.body);
-  if (!req.body.name) {
+  if (!req.body.name.trim()) {
     return next(new appError("Please pass nick name", 400));
   }
-  if (!req.body.password) {
+  if (!req.body.password.trim()) {
     return next(new appError("Please pass password", 400));
   }
-  if (!req.body.email) {
+  if (!req.body.email.trim()) {
     return next(new appError("Please pass email", 400));
   }
-  if (!req.body.gender) {
+  if (!req.body.gender.trim()) {
     return next(new appError("Please pass gender", 400));
   }
 
-  const isEmailAlreadyTaken = await User.findOne({ email: req.body.email });
+  const isEmailAlreadyTaken = await User.findOne({
+    email: req.body.email.trim(),
+  });
   if (isEmailAlreadyTaken)
     return next(new appError("Email has been registered", 400));
 
   const newUser = await User.create({
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-    gender: req.body.gender,
+    name: req.body.name.trim(),
+    email: req.body.email.trim(),
+    password: req.body.password.trim(),
+    gender: req.body.gender.trim(),
   });
   createSendToken(newUser, 201, req, res);
 });
@@ -62,11 +63,11 @@ module.exports.login = catchAsync(async (req, res, next) => {
   console.log("body:", req.body);
   const { email, password } = req.body;
 
-  if (!email || !password) {
+  if (!email.trim() || !password.trim()) {
     return next(new appError("please provide email and password", 400));
   }
 
-  const user = await User.findOne({ email }).select("+password");
+  const user = await User.findOne({ email: email.trim() }).select("+password");
 
   console.log("user:", user);
 

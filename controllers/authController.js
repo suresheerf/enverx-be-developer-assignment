@@ -41,11 +41,15 @@ module.exports.signUp = catchAsync(async (req, res, next) => {
   if (!req.body.email) {
     return next(new appError("Please pass email", 400));
   }
+  if (!req.body.gender) {
+    return next(new appError("Please pass gender", 400));
+  }
 
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
+    gender: req.body.gender,
   });
   createSendToken(newUser, 201, req, res);
 });

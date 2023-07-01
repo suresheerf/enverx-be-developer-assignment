@@ -2,8 +2,14 @@ const catchAsync = require("./../utils/catchAsync");
 const appError = require("../utils/appError");
 const Post = require("../models/post.model");
 const mongoose = require("mongoose");
+const { HOST } = require("../config/config");
 
 module.exports.createPost = catchAsync(async (req, res, next) => {
+  console.log("body:", req.body);
+  console.log("file:", req.file);
+  if (req.file) {
+    req.body.image = `${HOST}/${req.file.filename}`;
+  }
   if (!req.body.content.trim())
     return next(new appError("Please enter post content", 400));
   const blogPostObject = {
@@ -56,11 +62,16 @@ module.exports.getPosts = catchAsync(async (req, res, next) => {
 });
 
 module.exports.updatePost = catchAsync(async (req, res, next) => {
+  if (req.file) {
+    req.body.image = `${HOST}/${req.file.filename}`;
+  }
+
   const blogPost = await Post.findById(req.params.id);
 
   if (!blogPost) return next(new appError("Could not find the post", 404));
-
-  if (blogPost._id.toString() !== req.user._id.toString())
+  console.log("blogPost", blogPost);
+  console.log("user", req.user);
+  if (blogPost.userId.toString() !== req.user._id.toString())
     return next(new appError("This post does not belong to you", 401));
 
   if (req.body.content.trim()) blogPost.content = req.body.content.trim();
@@ -73,7 +84,7 @@ module.exports.updatePost = catchAsync(async (req, res, next) => {
 module.exports.deletePost = catchAsync(async (req, res, next) => {
   const blogPost = await Post.findById(req.params.id);
   if (!blogPost) return next(new appError("Could not find the post", 404));
-  if (blogPost._id.toString() !== req.user._id.toString())
+  if (blogPost.userId.toString() !== req.user._id.toString())
     return next(new appError("This post does not belong to you", 401));
   blogPost.status = "Deleted";
   await blogPost.save();
@@ -82,23 +93,20 @@ module.exports.deletePost = catchAsync(async (req, res, next) => {
 });
 
 module.exports.likePost = catchAsync(async (req, res, next) => {
-  const blogPost = await Post.findByIdAndUpdate(
-    req.params.id,
-    {
-      $addToSet: { likes: req.user._id },
-    },
-    { new: true }
-  );
+  const blogPost = await Post.findById(req.params.id);
+  if (!blogPost) return next(new appError("Could not find the post", 404));
+  await Post.findByIdAndUpdate(req.params.id, {
+    $addToSet: { likes: req.user },
+  });
   res.status(200).json({ message: "success" });
 });
 
 module.exports.unlikePost = catchAsync(async (req, res, next) => {
-  const blogPost = await Post.findByIdAndUpdate(
-    req.params.id,
-    {
-      $pull: { likes: req.user._id },
-    },
-    { new: true }
-  );
+  const blogPost = await Post.findById(req.params.id);
+  if (!blogPost) return next(new appError("Could not find the post", 404));
+  await Post.findByIdAndUpdate(req.params.id, {
+    $pull: { likes: req.user },
+  });
+
   res.status(200).json({ message: "success" });
 });
